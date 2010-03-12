@@ -20,8 +20,11 @@ require 'mixlib/cli'
 require 'brigade/cli'
 require 'brigade/config'
 require 'brigade/consumer'
+require 'brigade/formatter'
 require 'mq'
 require 'donkey'
+require 'chef'
+require 'chef/client'
 
 module Brigade 
   class CLI
@@ -45,18 +48,26 @@ module Brigade
       def run
         args = parse_options
         Brigade::Config.merge!(config)
-        consumer = Brigade::Consumer.new
-        consumer.subscribe(
-          config[:queue_name],
-          config[:topic], 
-          { :auto_delete => true, :exclusive => true }
-        ) do |info, data|
-          Brigade::Log.debug("---- Message Received ----")
-          Brigade::Log.debug("---- Headers ----")
-          Brigade::Log.debug(info.inspect)
-          Brigade::Log.debug("---- End Headers ----")
-          Brigade::Log.info("#{info.routing_key}: #{data}")
-          Brigade::Log.debug("---- End Message ----")
+
+        Chef::Config.from_file("/etc/chef/client.rb")
+
+        Donkey.start("brigade-client") do
+          def on_call
+            run_output = StringIO.new
+            Chef::Log.logger = Logger.new(run_output)
+            Chef::Log.logger.formatter = Brigade::Formatter.new
+            Chef::Log.level = :info
+            chef_client = Chef::Client.new
+            chef_client.node_name = Chef::Config[:node_name] 
+            chef_client.json_attribs = @chef_client_json
+            chef_client.determine_node_name
+            Chef::Log.logger.formatter.client_name = chef_client.node_name
+            chef_client.run
+            output = run_output.string
+            Chef::Log.error(output)
+            donkey.cast "sender", output 
+            Chef::Log.init(STDOUT)
+          end
         end
       end
     end

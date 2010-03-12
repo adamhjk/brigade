@@ -21,6 +21,7 @@ require 'brigade/cli'
 require 'brigade/config'
 require 'brigade/consumer'
 require 'mq'
+require 'donkey'
 
 module Brigade 
   class CLI
@@ -44,22 +45,15 @@ module Brigade
       def run
         args = parse_options
         Brigade::Config.merge!(config)
-        @amq = MQ.new(
-          AMQP.connect({
-            :host => Brigade::Config['amqp_host'],
-            :port => Brigade::Config['amqp_port'],
-            :user => Brigade::Config['amqp_user'],
-            :pass => Brigade::Config['amqp_pass'],
-            :vhost => Brigade::Config['amqp_vhost'],
-            :timeout => Brigade::Config['amqp_connection_timeout'],
-            :logging => Brigade::Config['amqp_logging']
-          })
-        )
-        @amq.topic("brigade", { :durable => true, :nowait => false }).publish("I want a pony", :key => "brigade.pony")
+        
+        sender = Donkey.start("sender") do
+          def on_cast
+            puts message.data
+          end
+        end
+        sender.bcall("brigade-client", "run")
       end
     end
   end
 end
-
-
 

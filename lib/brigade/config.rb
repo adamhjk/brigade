@@ -16,7 +16,21 @@
 # limitations under the License.
 #
 
+require 'mixlib/config'
+
 module Brigade
-  require 'brigade/config'
-  require 'brigade/log'
+  class Config
+    extend Mixlib::Config
+
+    log_level :info
+    log_location STDOUT
+    amqp_host '127.0.0.1'
+    amqp_port '5672'
+    amqp_user 'guest'
+    amqp_pass 'guest'
+    amqp_vhost '/'
+    amqp_connection_timeout nil
+    amqp_logging false
+    
+  end
 end

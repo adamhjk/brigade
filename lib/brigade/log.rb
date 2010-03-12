@@ -16,7 +16,18 @@
 # limitations under the License.
 #
 
+require 'mixlib/log'
+require 'brigade/config'
+
 module Brigade
-  require 'brigade/config'
-  require 'brigade/log'
+  class Log
+    extend Mixlib::Log
+
+    STDERR.sync = STDOUT.sync = true
+
+    init(Brigade::Config[:log_location])
+    level = Brigade::Config[:log_level]
+    
+  end
 end
+

@@ -1,0 +1,9 @@
+Brigade NOTICE
+===========
+
+Developed by Adam Jacob (http://www.opscode.com), James Golick (http://jamesgolick.com/) and Howard Yeh (http://www.metacircus.com/) at MWRC 2010.
+
+Brigade::Formatter includes code taken from Mixlib::Log, which is copyright Opscode and available under the Apache license.
+
+
+

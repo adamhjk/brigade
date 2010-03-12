@@ -1,17 +1,16 @@
 = brigade
 
-Description goes here.
+Manage a brigade of chef clients over AMQP.
 
-== Note on Patches/Pull Requests
- 
-* Fork the project.
-* Make your feature addition or bug fix.
-* Add tests for it. This is important so I don't break it in a
-  future version unintentionally.
-* Commit, do not mess with rakefile, version, or history.
-  (if you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)
-* Send me a pull request. Bonus points for topic branches.
+Rather than running the traditional chef-client, you should run "brigade-client" on your chef nodes.  You can then trigger a global chef-run on all nodes with the 'brigade' command - the output will be prefaced with the node name.
+
+It doesn't get more not-ready than this.  It works fine on my laptop, but it depends on Donkey, which isn't even released yet. :)
+
+It also needs some work:
+
+ * Support chef-solo runs
+ * The full command line arguments passed to chef-client or chef-solo should be transparently passed to the brigade
 
 == Copyright
 
-Copyright (c) 2010 Adam Jacob. See LICENSE for details.
+Copyright (c) 2010 Adam Jacob. See LICENSE and NOTICE for details.

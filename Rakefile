@@ -5,13 +5,21 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "brigade"
-    gem.summary = %Q{Chef over AMQP}
-    gem.description = %Q{Trigger chef runs over AMQP}
+    gem.summary = %Q{Manage a brigade of Chef clients over AMQP}
+    gem.description = %Q{Brigade allows you to trigger chef runs over AMQP}
     gem.email = "adam@opscode.com"
     gem.homepage = "http://github.com/adamhjk/brigade"
     gem.authors = ["Adam Jacob"]
     gem.add_development_dependency "rspec", ">= 1.2.9"
     gem.add_development_dependency "yard", ">= 0"
+
+    gem.add_dependency "mixlib-cli", ">= 1.1.0"
+    gem.add_dependency "mixlib-log", ">= 1.1.0"
+    gem.add_dependency "mixlib-config", ">= 1.1.0"
+    gem.add_dependency "chef", ">= 0.8.2"
+
+    gem.executables = [ "brigade", "brigade-client" ]
+
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new

@@ -1,6 +1,6 @@
 #
 # Author:: Adam Jacob (<adam@opscode.com>)
-# Copyright:: Copyright (c) 2009 Adam Jacob 
+# Copyright:: Copyright (c) 2010 Adam Jacob 
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

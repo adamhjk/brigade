@@ -1,6 +1,6 @@
 #
 # Author:: Adam Jacob (<adam@opscode.com>)
-# Copyright:: Copyright (c) 2009 Adam Jacob 
+# Copyright:: Copyright (c) 2010 Adam Jacob 
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +19,6 @@
 require 'mixlib/cli'
 require 'brigade/cli'
 require 'brigade/config'
-require 'brigade/consumer'
-require 'mq'
 require 'donkey'
 
 module Brigade 
@@ -28,30 +26,24 @@ module Brigade
     class BrigadeRunner
       include Mixlib::CLI
 
-      option :queue_name,
-        :short => "-q QUEUE",
-        :long => "--queue QUEUE",
-        :description => "Default queue name - should be unique",
-        :default => "brigade-#{rand(10000)}" # Cheap hack
-
-      option :topic,
-        :short => "-p PATTERN",
-        :long => "--pattern PATTERN",
-        :description => "The route pattern to listen on (defaults to brigade.#)",
-        :default => "brigade.#"
-
+      option :node_name,
+        :short => "-N NODE_NAME",
+        :long => "--node-name NODE_NAME",
+        :description => "The node name for this client",
+        :proc => nil
+      
       options.merge!(Brigade::CLI.options)
 
       def run
         args = parse_options
         Brigade::Config.merge!(config)
         
-        sender = Donkey.start("sender") do
+        sender = Donkey.start("brigade-runner") do
           def on_cast
             puts message.data
           end
         end
-        sender.bcall("brigade-client", "run")
+        sender.bcall("brigade-client", { :type => "chef-client" } )
       end
     end
   end

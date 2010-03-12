@@ -1,6 +1,6 @@
 #
 # Author:: Adam Jacob (<adam@opscode.com>)
-# Copyright:: Copyright (c) 2009 Adam Jacob 
+# Copyright:: Copyright (c) 2010 Adam Jacob 
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,29 +19,27 @@
 require 'mixlib/cli'
 require 'brigade/cli'
 require 'brigade/config'
-require 'brigade/consumer'
 require 'brigade/formatter'
-require 'mq'
 require 'donkey'
 require 'chef'
 require 'chef/client'
 
 module Brigade 
   class CLI
-    class Watcher
+    class Client 
       include Mixlib::CLI
 
-      option :queue_name,
-        :short => "-q QUEUE",
-        :long => "--queue QUEUE",
-        :description => "Default queue name - should be unique",
-        :default => "brigade-watcher-#{rand(10000)}" # Cheap hack
+      option :node_name,
+        :short => "-N NODE_NAME",
+        :long => "--node-name NODE_NAME",
+        :description => "The node name for this client",
+        :proc => nil
 
-      option :topic,
-        :short => "-p PATTERN",
-        :long => "--pattern PATTERN",
-        :description => "The route pattern to listen on (defaults to brigade.#)",
-        :default => "brigade.#"
+      option :splay,
+        :short => "-s SECONDS",
+        :long => "--splay SECONDS",
+        :description => "The splay time for running at intervals, in seconds",
+        :proc => lambda { |s| s.to_i }
 
       options.merge!(Brigade::CLI.options)
 
@@ -50,6 +48,7 @@ module Brigade
         Brigade::Config.merge!(config)
 
         Chef::Config.from_file("/etc/chef/client.rb")
+        Chef::Config.node_name = config[:node_name] if config.has_key?(:node_name)
 
         Donkey.start("brigade-client") do
           def on_call
@@ -62,14 +61,26 @@ module Brigade
             chef_client.json_attribs = @chef_client_json
             chef_client.determine_node_name
             Chef::Log.logger.formatter.client_name = chef_client.node_name
-            chef_client.run
+            puts message.data.inspect
+            case message.data[:type]
+            when "chef-client"
+              chef_client.run
+            when "chef-solo"
+              chef_client.run_solo
+            end
             output = run_output.string
-            Chef::Log.error(output)
-            donkey.cast "sender", output 
+            Chef::Log.info(output)
+            donkey.cast "brigade-runner", output 
             Chef::Log.init(STDOUT)
           end
         end
+
+        def on_error(error)
+          Chef::Log.error(error)
+          donkey.cast "brigade-runner", error 
+        end
       end
+
     end
   end
 end
